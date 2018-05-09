@@ -1,8 +1,13 @@
+const bcrypt = require("bcrypt");
+const userCtrl = require("../controllers/user");
 var LocalStrategy = require("passport-local").Strategy;
 
 module.exports = new LocalStrategy((username, password, done) => {
-  console.log(username);
   if (username === "" || password === "") return done(new Error("Empty form!"));
-  if (!(username === "tinh" && password === "123")) return done(null, false, { message: "username or password inccorect" });
-  return done(null, { username, password });
+  userCtrl.login(username, password, (er, user) => {
+    if (er) return done(null, false, er);
+    else {
+      return done(null, user);
+    }
+  })
 })

@@ -1,6 +1,10 @@
 const { generateToken, validate } = require("../../lib/utilities");
 const user_model = require("../model/user");
-const bycrypt = require("bycrypt");
+const bcrypt = require("bcrypt");
+const KEY_SECRET = require("../../config").KEY_SECRET;
+const saltRounds = 10;
+
+
 
 const afterLogin = (req, res) => {
   const token = generateToken(req.user);
@@ -15,22 +19,44 @@ const add = (req, res) => {
   const user = {
     username: req.body.username || null,
     password: req.body.password || null,
-    password: req.body.fullname || null
+    fullname: req.body.fullname || null
   };
 
-  validate(user, (er, suc) => {
+  validate.validateFormUser(user, (er, suc) => {
+    console.log(er, suc);
     if (er) {
-      req.status(400).json(er);
+      res.status(400).json(er);
     } else {
-      user_model.addOne(user, (er, data) => {
-        res.status(200).json(req.data);
+      bcrypt.hash(user.password, saltRounds, (er, hash) => {
+        user.password = hash;
+        user_model.addOne(user, (er, data) => {
+          if (er) res.status(409).json(er);
+          else {
+            res.status(200).json(data);
+          }
+        })
+      }, KEY_SECRET);
+    }
+  })
+}
+
+const login = (username, password, cb) => {
+  user_model.getUserByUsername(username, (er, data) => {
+    if (er) cb(er);
+    else {
+      bcrypt.compare(password, data.password, (er, check) => {
+        if (check) {
+          cb(false, data);
+        } else {
+          cb({password: "Password incorrect!"});
+        }
       })
     }
   })
 }
 
-
 module.exports = {
+  login,
   afterLogin,
   changePassword,
   add

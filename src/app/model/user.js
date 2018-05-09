@@ -6,7 +6,7 @@ const addOne = (user, cb) => {
     con.getConnection((err, sql) => {
         if (err) return cb(err);
         sql.query(statement, [user.username, user.password, user.fullname], (er, result) => {
-            if (er) cb(er, null);
+            if (er) cb({error: er.sqlMessage}, null);
             else {
                 getUserByUsername(user.username, (er, user) => {
                     if (er) cb(er, null);
