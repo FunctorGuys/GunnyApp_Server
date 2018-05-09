@@ -19,7 +19,9 @@ passport.use(passportAuthen);
 app.use(cors()); // cross-origin for all route
 app.use(logger("dev"));
 app.use(cookiesParser()); // use to get cookies of request header
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
 app.use(passport.initialize());
 app.use("/assets", express.static("assets"));
 

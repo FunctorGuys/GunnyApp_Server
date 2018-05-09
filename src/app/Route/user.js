@@ -11,6 +11,7 @@ router.post("/login", passport.authenticate('local', {
   session: false
 }), userControler.afterLogin);
 
+
 router.post("/register", userControler.add);
 
 router.get("/abc", (req, res) => {
