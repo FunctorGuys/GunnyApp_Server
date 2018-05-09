@@ -13,5 +13,11 @@ router.post("/login", passport.authenticate('local', {
 
 router.post("/register", userControler.add);
 
+router.get("/abc", (req, res) => {
+  res.status(200).json({
+    message: "YOU ARE CONNECTED"
+  })
+})
+
 router.get("/changePassword", ...auth, userControler.changePassword);
 module.exports = router;
