@@ -19,8 +19,11 @@ const add = (req, res) => {
   const user = {
     username: req.body.username || null,
     password: req.body.password || null,
+    cfpassword: req.body.cfpassword || null,
     fullname: req.body.fullname || null
   };
+
+  user.username = user.username.toLowerCase();
 
   validate.validateFormUser(user, (er, suc) => {
     console.log(er, suc);
