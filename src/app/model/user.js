@@ -28,7 +28,31 @@ const getUserByUsername = (username, cb) => {
     })
 }
 
+const increateWin = (id_winner, cb) => {
+    const statement = "UPDATE users SET win=win + 1 WHERE id = ?";
+    con.getConnection((err, sql) => {
+        if (err) return cb(err);
+        sql.query(statement, [id_winner], (er, result) => {
+            if (er) cb(true);
+            else cb(false, result);
+        })
+    })
+}
+
+const increateLose = (id_loser, cb) => {
+    const statement = "UPDATE users SET lose=lose + 1 WHERE id = ?";
+    con.getConnection((err, sql) => {
+        if (err) return cb(err);
+        sql.query(statement, [id_loser], (er, result) => {
+            if (er) cb(true);
+            else cb(false, result);
+        })
+    })
+}
+
 module.exports = {
     addOne,
     getUserByUsername,
+    increateWin,
+    increateLose
 }

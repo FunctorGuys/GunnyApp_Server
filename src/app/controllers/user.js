@@ -58,9 +58,25 @@ const login = (username, password, cb) => {
   })
 }
 
+const increateWin = (id_winner, cb) => {
+  user_model.increateWin(id_winner, (er, success) => {
+    if (er) cb(er);
+    else cb(false, success);
+  });
+} 
+
+const increateLose = (id_loser, cb) => {
+  user_model.increateLose(id_loser, (er, success) => {
+    if (er) cb(er);
+    else cb(false, success);
+  });
+} 
+
 module.exports = {
   login,
   afterLogin,
   changePassword,
-  add
+  add,
+  increateWin,
+  increateLose
 }

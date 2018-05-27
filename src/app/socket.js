@@ -1,4 +1,5 @@
 var socketio = require('socket.io');
+const userCtrl = require("./controllers/user");
 
 const clients = {};
 let rooms = [
@@ -149,6 +150,55 @@ const listenClient = (socketClient, websocket) => {
         onPressSquare(createrSocketId, inviteeSocketId, x, y, caro_text);
     })
 
+    // Client setCaroWinner
+    console.log("Client setCaroWinner");
+    socketClient.on("setCaroWinner", data => {
+        const {
+            idRoom,
+            SocketIdLoser,
+            IdLoser,
+            IdWinner,
+            arrayXandYs
+        } = data;
+        
+        let dem = 0;
+        let cb = (er, suc) => {
+            if (er) return;
+            dem++;
+            if (dem === 2) {
+                // Done set win and lose number
+                let roomChange = {};
+                rooms = rooms.map(room => {
+                    if (room.id === idRoom) {
+                        if (room.creater.id === IdWinner) {
+                            room.creater.win += 1;
+                            room.invitee.lose += 1;
+                        } else {
+                            room.creater.lose += 1;
+                            room.invitee.win += 1;
+                        }
+
+                        room.creater.isReady = room.invitee.isReady = false;
+                        return roomChange = room;
+                    }   
+                    return room;
+                })
+
+                updateRoom(roomChange);
+                
+                socketClient.emit("fillSquareWin", arrayXandYs);
+                clients[SocketIdLoser].emit("fillSquareWin", arrayXandYs);
+
+                socketClient.emit("stopRoom");
+                clients[SocketIdLoser].emit("stopRoom");
+
+                // socketClient.emit("setWinner", IdWinner);
+                // clients[SocketIdLoser].emit("setWinner", IdWinner);
+            }
+        }
+        userCtrl.increateWin(IdWinner, cb);
+        userCtrl.increateLose(IdLoser, cb);
+    })
 
     // Client disconnect
     socketClient.on("disconnect", () => {
@@ -158,34 +208,16 @@ const listenClient = (socketClient, websocket) => {
 }
 
 const updateRoom = room => {
-    // Object.keys(clients).forEach(client_id => {
-    //     const client = clients[client_id];
-    //     if (client.id) {
-    //         client.emit("updateRoom", room);
-    //     }
-    // });
     websocket.emit("updateRoom", room);
 }
 
 const cancelRoom = room_id => {
     rooms = rooms.filter(room => room.id !== room_id);
-    // Object.keys(clients).forEach(client_id => {
-    //     const client = clients[client_id];
-    //     if (client.id) {
-    //         client.emit("cancelRoom", room_id);
-    //     }
-    // });
     websocket.emit("cancelRoom", room_id);
 }
 
 const createRoom = async (room, cb) => {
     try {
-        // await Object.keys(clients).forEach(client_id => {
-        //     const client = clients[client_id];
-        //     if (client.id) {
-        //         client.emit("createRoom", room);
-        //     }
-        // });
         await websocket.emit("createRoom", room);
         cb();
 
