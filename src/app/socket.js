@@ -39,9 +39,10 @@ let rooms = [
     // },
 ];
 
+let websocket = null;
 
 const connectSocket = (server) => {
-    const websocket = socketio.listen(server);
+    websocket = socketio.listen(server);
     websocket.on('connection', (client) => {
         console.log('A client just joined on', client.id);
         clients[client.id] = client;
@@ -49,7 +50,7 @@ const connectSocket = (server) => {
     });
 }
 
-const listenClient = socketClient => {
+const listenClient = (socketClient, websocket) => {
     // Client get all rooms
     socketClient.on("getActiveRooms", () => {
         socketClient.emit("receivedActiveRooms", rooms);
@@ -157,32 +158,35 @@ const listenClient = socketClient => {
 }
 
 const updateRoom = room => {
-    Object.keys(clients).forEach(client_id => {
-        const client = clients[client_id];
-        if (client.id) {
-            client.emit("updateRoom", room);
-        }
-    });
+    // Object.keys(clients).forEach(client_id => {
+    //     const client = clients[client_id];
+    //     if (client.id) {
+    //         client.emit("updateRoom", room);
+    //     }
+    // });
+    websocket.emit("updateRoom", room);
 }
 
 const cancelRoom = room_id => {
     rooms = rooms.filter(room => room.id !== room_id);
-    Object.keys(clients).forEach(client_id => {
-        const client = clients[client_id];
-        if (client.id) {
-            client.emit("cancelRoom", room_id);
-        }
-    });
+    // Object.keys(clients).forEach(client_id => {
+    //     const client = clients[client_id];
+    //     if (client.id) {
+    //         client.emit("cancelRoom", room_id);
+    //     }
+    // });
+    websocket.emit("cancelRoom", room_id);
 }
 
 const createRoom = async (room, cb) => {
     try {
-        await Object.keys(clients).forEach(client_id => {
-            const client = clients[client_id];
-            if (client.id) {
-                client.emit("createRoom", room);
-            }
-        });
+        // await Object.keys(clients).forEach(client_id => {
+        //     const client = clients[client_id];
+        //     if (client.id) {
+        //         client.emit("createRoom", room);
+        //     }
+        // });
+        await websocket.emit("createRoom", room);
         cb();
 
     } catch(er) {
