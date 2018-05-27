@@ -2,41 +2,41 @@ var socketio = require('socket.io');
 
 const clients = {};
 let rooms = [
-    {
-        id: 154832146284,
-        name: "ROOM001",
-        isFull: true,
-        creater: {
-            id: 54554,
-            username: "user001",
-            fullname: "User 001",
-            isReady: false,
-            win: 2,
-            lose: 12,
-        },
-        invitee: {
-            id: 2444,
-            username: "user002",
-            fullname: "User 002",
-            isReady: true,
-            win: 3,
-            lose: 10,
-        }
-    },
-    {
-        id: 154832148884,
-        name: "ROOM002",
-        isFull: false,
-        creater: {
-            id: 5422554,
-            username: "user003",
-            fullname: "User 003",
-            isReady: false,
-            win: 12,
-            lose: 10,
-        },
-        invitee: {}
-    },
+    // {
+    //     id: 154832146284,
+    //     name: "ROOM001",
+    //     isFull: true,
+    //     creater: {
+    //         id: 54554,
+    //         username: "user001",
+    //         fullname: "User 001",
+    //         isReady: false,
+    //         win: 2,
+    //         lose: 12,
+    //     },
+    //     invitee: {
+    //         id: 2444,
+    //         username: "user002",
+    //         fullname: "User 002",
+    //         isReady: true,
+    //         win: 3,
+    //         lose: 10,
+    //     }
+    // },
+    // {
+    //     id: 154832148884,
+    //     name: "ROOM002",
+    //     isFull: false,
+    //     creater: {
+    //         id: 5422554,
+    //         username: "user003",
+    //         fullname: "User 003",
+    //         isReady: false,
+    //         win: 12,
+    //         lose: 10,
+    //     },
+    //     invitee: {}
+    // },
 ];
 
 
@@ -67,6 +67,8 @@ const listenClient = socketClient => {
                     isFull: true,
                     invitee: {
                         ...user,
+                        socket_id: socketClient.id,
+                        caro_text: "O",
                         isReady: false
                     }
                 }
@@ -74,7 +76,6 @@ const listenClient = socketClient => {
             return room;
         })
         updateRoom(roomChange);
-        
     })
 
     // Client on leaveRoom
@@ -100,6 +101,34 @@ const listenClient = socketClient => {
         }
     })
 
+    // Client onReady
+    socketClient.on("onReady", ({room_id, user_id}) => {
+        let roomChange = {};
+        rooms = rooms.map(room => {
+            if (room.id === room_id) {
+                if (room.creater.id === user_id) room.creater.isReady = true;
+                else room.invitee.isReady = true;
+                return roomChange = room;
+            }
+            return room;
+        })
+        updateRoom(roomChange);
+    })
+
+    // Client onNoReady
+    socketClient.on("onNoReady", ({room_id, user_id}) => {
+        let roomChange = {};
+        rooms = rooms.map(room => {
+            if (room.id === room_id) {
+                if (room.creater.id === user_id) room.creater.isReady = false;
+                else room.invitee.isReady = false;
+                return roomChange = room;
+            }
+            return room;
+        })
+        updateRoom(roomChange);
+    })
+
     // Client create new room 
     socketClient.on("createRoom", newRoom => {
         console.log("Client create new room");
@@ -107,6 +136,16 @@ const listenClient = socketClient => {
         createRoom(newRoom, () => {
             socketClient.emit("createdRoom", newRoom);
         });
+    })
+
+    // Client onPressSquare
+    console.log("Client onPressSquare");
+    socketClient.on("onPressSquare", ({x, y, room_id}) => {
+        const roomPlaying = rooms.filter(room => room.id === room_id)[0];
+        const createrSocketId = roomPlaying.creater.socket_id;
+        const inviteeSocketId = roomPlaying.invitee.socket_id;
+        const caro_text = socketClient.id === createrSocketId ? roomPlaying.creater.caro_text : roomPlaying.invitee.caro_text;
+        onPressSquare(createrSocketId, inviteeSocketId, x, y, caro_text);
     })
 
 
@@ -146,6 +185,16 @@ const createRoom = async (room, cb) => {
         });
         cb();
 
+    } catch(er) {
+        console.log(er);
+    }
+}
+
+const onPressSquare = async (createrSocketId, inviteeSocketId, x, y, caro_text) => {
+    try {
+        const data = {x, y, caro_text};
+        clients[createrSocketId].emit("onPressSquare", data);
+        clients[inviteeSocketId].emit("onPressSquare", data);
     } catch(er) {
         console.log(er);
     }
