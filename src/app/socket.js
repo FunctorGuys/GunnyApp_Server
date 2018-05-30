@@ -141,8 +141,9 @@ const listenClient = (socketClient, websocket) => {
     })
 
     // Client onPressSquare
-    console.log("Client onPressSquare");
+    
     socketClient.on("onPressSquare", ({x, y, room_id}) => {
+        console.log("Client onPressSquare");
         const roomPlaying = rooms.filter(room => room.id === room_id)[0];
         const createrSocketId = roomPlaying.creater.socket_id;
         const inviteeSocketId = roomPlaying.invitee.socket_id;
@@ -151,8 +152,9 @@ const listenClient = (socketClient, websocket) => {
     })
 
     // Client setCaroWinner
-    console.log("Client setCaroWinner");
+   
     socketClient.on("setCaroWinner", data => {
+        console.log("Client setCaroWinner");
         const {
             idRoom,
             SocketIdLoser,
@@ -186,6 +188,9 @@ const listenClient = (socketClient, websocket) => {
 
                 updateRoom(roomChange);
                 
+                socketClient.emit("IM_WINNER");
+                clients[SocketIdLoser].emit("IM_LOSER");
+
                 socketClient.emit("fillSquareWin", arrayXandYs);
                 clients[SocketIdLoser].emit("fillSquareWin", arrayXandYs);
 
